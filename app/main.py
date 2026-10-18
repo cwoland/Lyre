@@ -11,6 +11,7 @@ from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.errors import ErrorResponse, register_exception_handlers
 from app.core.logging import configure_logging
+from app.db.session import dispose_engine
 
 
 def _operation_id(route: APIRoute) -> str:
@@ -20,7 +21,10 @@ def _operation_id(route: APIRoute) -> str:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    yield
+    try:
+        yield
+    finally:
+        await dispose_engine()
 
 
 def create_app() -> FastAPI:

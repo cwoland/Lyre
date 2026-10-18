@@ -1,10 +1,10 @@
 from enum import StrEnum
 from functools import lru_cache
 from os import getenv
-from typing import Annotated
+from typing import Annotated, Literal
 
-from pydantic import BeforeValidator, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BeforeValidator, Field, PostgresDsn, SecretStr
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Environment(StrEnum):
@@ -12,12 +12,14 @@ class Environment(StrEnum):
     test = "test"
     production = "production"
 
+
 def _split_csv(value: object) -> object:
     if isinstance(value, str):
         return [item.strip() for item in value.split(",") if item.strip()]
     return value
 
-CsvList = Annotated[list[str], BeforeValidator(_split_csv)]
+
+CsvList = Annotated[list[str], NoDecode, BeforeValidator(_split_csv)]
 
 
 class Settings(BaseSettings):
@@ -27,10 +29,22 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    environment: Environment.local
+    environment: Environment = Environment.local
     log_level: str = "INFO"
     api_prefix: str = "/api/v1"
     cors_origins: CsvList = Field(default_factory=list)
+    database_url: PostgresDsn
+    db_pool_size: int = 5
+    db_max_overflow: int = 0
+    db_pool_recycle: int = 1800
+    db_echo: bool = False
+    db_disable_prepared_statements: bool = False
+    jwt_secret: SecretStr
+    jwt_algorithm: str = "HS256"
+    access_token_ttl_minutes: int = 15
+    refresh_token_ttl_days: int = 30
+    cookie_secure: bool = True
+    cookie_samesite: Literal["lax", "strict", "none"] = "none"
 
     @property
     def is_production(self) -> bool:

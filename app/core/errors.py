@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class ErrorCode(StrEnum):
     validation_error = "validation_error"
     unauthorized = "unauthorized"
+    invalid_credentials = "invalid_credentials"
+    email_taken = "email_taken"
     forbidden = "forbidden"
     not_found = "not_found"
     conflict = "conflict"
@@ -68,8 +70,18 @@ class ConflictError(AppError):
     code = ErrorCode.conflict
 
 
+class InvalidCredentialsError(AppError):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    code = ErrorCode.invalid_credentials
+
+
+class EmailTakenError(AppError):
+    status_code = status.HTTP_409_CONFLICT
+    code = ErrorCode.email_taken
+
+
 class LimitExceededError(AppError):
-    status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
+    status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
     code = ErrorCode.limit_exceeded
 
 
@@ -78,7 +90,7 @@ _STATUS_TO_CODE: dict[int, ErrorCode] = {
     status.HTTP_403_FORBIDDEN: ErrorCode.forbidden,
     status.HTTP_404_NOT_FOUND: ErrorCode.not_found,
     status.HTTP_409_CONFLICT: ErrorCode.conflict,
-    status.HTTP_422_UNPROCESSABLE_ENTITY: ErrorCode.validation_error,
+    status.HTTP_422_UNPROCESSABLE_CONTENT: ErrorCode.validation_error,
     status.HTTP_429_TOO_MANY_REQUESTS: ErrorCode.rate_limited,
 }
 
@@ -104,7 +116,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def handle_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
         return error_json(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
             ErrorCode.validation_error,
             "Request validation failed",
             {"errors": jsonable_encoder(exc.errors())},
