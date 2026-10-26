@@ -11,13 +11,13 @@ from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatc
 from app.core.config import get_settings
 from app.core.errors import UnauthorizedError
 
-
 _hasher: Final = PasswordHasher(time_cost=2, memory_cost=19456, parallelism=1)
 
 _DUMMY_HASH: Final = _hasher.hash("timing-attack-placeholder")
 
 ACCESS_TOKEN_TYPE: Final = "access"
 REFRESH_TOKEN_BYTES: Final = 48
+INVITE_TOKEN_BYTES: Final = 32
 
 
 def hash_password(password: str) -> str:
@@ -73,9 +73,13 @@ def decode_access_token(token: str) -> UUID:
         raise UnauthorizedError("Invalid token subject") from error
 
 
-def generate_refresh_token(token: str) -> str:
+def generate_refresh_token() -> str:
     return secrets.token_urlsafe(REFRESH_TOKEN_BYTES)
 
 
-def hash_refresh_token(token: str) -> str:
+def generate_invite_token() -> str:
+    return secrets.token_urlsafe(INVITE_TOKEN_BYTES)
+
+
+def hash_opaque_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()

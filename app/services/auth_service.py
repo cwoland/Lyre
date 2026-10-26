@@ -10,8 +10,8 @@ from app.core.palette import pick_color_cursor
 from app.core.security import (
     burn_password_time,
     generate_refresh_token,
+    hash_opaque_token,
     hash_password,
-    hash_refresh_token,
     verify_password,
 )
 from app.models import RefreshToken, User
@@ -68,7 +68,7 @@ async def issue_refresh_token(session: AsyncSession, user: User) -> tuple[str, d
     session.add(
         RefreshToken(
             user_id=user.id,
-            token_hash=hash_refresh_token(raw_token),
+            token_hash=hash_opaque_token(raw_token),
             expires_at=expires_at,
         )
     )
@@ -89,7 +89,7 @@ async def rotate_refresh_token(
     raw_token: str,
 ) -> tuple[User, str, datetime]:
     stored = await session.scalar(
-        select(RefreshToken).where(RefreshToken.token_hash == hash_refresh_token(raw_token))
+        select(RefreshToken).where(RefreshToken.token_hash == hash_opaque_token(raw_token))
     )
     if stored is None:
         raise UnauthorizedError("Invalid refresh token")
@@ -114,7 +114,7 @@ async def rotate_refresh_token(
 
 async def revoke_refresh_token(session: AsyncSession, raw_token: str) -> None:
     stored = await session.scalar(
-        select(RefreshToken).where(RefreshToken.token_hash == hash_refresh_token(raw_token))
+        select(RefreshToken).where(RefreshToken.token_hash == hash_opaque_token(raw_token))
     )
     if stored is not None and stored.revoked_at is None:
         stored.revoked_at = datetime.now(UTC)

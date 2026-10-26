@@ -1,6 +1,5 @@
 import secrets
-from typing import Literal
-
+from typing import Final
 
 CURSOR_COLORS: Final = (
     "#ef4444",

@@ -11,7 +11,6 @@ from app.models import User
 from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest, UserResponse
 from app.services import auth_service
 
-
 REFRESH_COOKIE_NAME: Final = "lyre_refresh"
 
 router = APIRouter(prefix="/auth", tags=["auth"])

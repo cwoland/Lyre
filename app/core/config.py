@@ -3,7 +3,7 @@ from functools import lru_cache
 from os import getenv
 from typing import Annotated, Literal
 
-from pydantic import BeforeValidator, Field, PostgresDsn, SecretStr
+from pydantic import BeforeValidator, Field, PostgresDsn, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     refresh_token_ttl_days: int = 30
     cookie_secure: bool = True
     cookie_samesite: Literal["lax", "strict", "none"] = "none"
+    max_boards_per_owner: int = 5
+    max_board_members: int = 5
+
+    @field_validator("jwt_secret")
+    @classmethod
+    def _secret_is_long_enough(cls, value: SecretStr) -> SecretStr:
+        if len(value.get_secret_value()) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters")
+        return value
 
     @property
     def is_production(self) -> bool:

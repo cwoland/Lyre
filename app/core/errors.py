@@ -23,6 +23,7 @@ class ErrorCode(StrEnum):
     limit_exceeded = "limit_exceeded"
     rate_limited = "rate_limited"
     internal_error = "internal_error"
+    invite_invalid = "invite_invalid"
 
 
 class ErrorBody(BaseModel):
@@ -83,6 +84,11 @@ class EmailTakenError(AppError):
 class LimitExceededError(AppError):
     status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
     code = ErrorCode.limit_exceeded
+
+
+class InviteInvalidError(AppError):
+    status_code = status.HTTP_410_GONE
+    code = ErrorCode.invite_invalid
 
 
 _STATUS_TO_CODE: dict[int, ErrorCode] = {
